@@ -14,7 +14,7 @@ from adafruit_display_text import label
 import adafruit_displayio_ssd1306
 
 pixels=neopixel.NeoPixel(board.D12, 190, brightness=0.0125, auto_write=False)
-pixels.fill((255,255,255))
+pixels.fill((255,0,0))
 pixels.show()
 displayio.release_displays()
 
