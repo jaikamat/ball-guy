@@ -82,10 +82,20 @@ b2.pull = digitalio.Pull.UP
 b3.direction = digitalio.Direction.INPUT
 b3.pull = digitalio.Pull.UP
 
+radio_1 = digitalio.DigitalInOut(board.D25)
+radio_1.direction = digitalio.Direction.INPUT
+radio_2 = digitalio.DigitalInOut(board.D24)
+radio_2.direction = digitalio.Direction.INPUT
+radio_3 = digitalio.DigitalInOut(board.D11)
+radio_3.direction = digitalio.Direction.INPUT
+radio_4 = digitalio.DigitalInOut(board.D10)
+radio_4.direction = digitalio.Direction.INPUT
+
+
 
 # --------------------- step 3 - prepare neopixels
 
-pixels=neopixel.NeoPixel(board.D12, 190, brightness=0.0125, auto_write=False)
+pixels=neopixel.NeoPixel(board.D12, 192, brightness=0.2, auto_write=False)
 pixels.fill((255,255,255))
 pixels.show()
 displayio.release_displays()
@@ -124,12 +134,18 @@ splash.append(text_area)
 # --------------------- step 5 - enter loop 
 colormode=1
 changed=False
+counter=0
+while True:
 
-for x in range(0,18):
-    for y in range (0,12):
-        eyes[y][x] = ((x^y % 255),(x^y % 255),(x^y % 255) )
-update_eyes(eyes, eyemap, pixels)
-pixels.show()
+    for y in range(0,12):
+        for x in range (0,18):
+            color = ((counter+x) % 18)* (255/18)
+            eyes[y][x] = (color, color, color )
+    update_eyes(eyes, eyemap, pixels)
+    pixels.show()
+    counter+=1
+    pass
+
 
 while True:
     if changed == True:
