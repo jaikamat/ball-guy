@@ -13,8 +13,10 @@ import terminalio
 import neopixel
 from adafruit_display_text import label
 import adafruit_displayio_ssd1306
-#                            91011121314151617
-#         0 1 2 3 4 5 6 7 8  0 1 2 3 4 5 6 7 8
+
+
+# --------------------- step 1 - prepare eye bitmap translation matrix
+        # 0 1 2 3 4 5 6 7 8  9 0 1 2 3 4 5 6 7 
 eyemap= [[1,1,0,0,0,0,0,1,1, 1,1,0,0,0,0,0,1,1], # 0
          [1,0,0,0,0,0,0,0,1, 1,0,0,0,0,0,0,0,1], # 1
          [0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0], # 2
@@ -28,6 +30,47 @@ eyemap= [[1,1,0,0,0,0,0,1,1, 1,1,0,0,0,0,0,1,1], # 0
          [1,0,0,0,0,0,0,0,1, 1,0,0,0,0,0,0,0,1], # 10
          [1,1,0,0,0,0,0,1,1, 1,1,0,0,0,0,0,1,1]] # 11
 
+        # 0 1 2 3 4 5 6 7 8  9 0 1 2 3 4 5 6 7 
+eyes   = [[1,1,0,0,0,0,0,1,1, 1,1,0,0,0,0,0,1,1], # 0 - this is the bitmap array for the eyes. the initial data here is just placeholder
+         [1,0,0,0,0,0,0,0,1, 1,0,0,0,0,0,0,0,1], # 1
+         [0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0], # 2
+         [0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0], # 3
+         [0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0], # 4 
+         [0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0], # 5
+         [0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0], # 6
+         [0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0], # 7
+         [0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0], # 8
+         [0,0,0,0,0,0,0,0,1, 1,0,0,0,0,0,0,0,0], # 9
+         [1,0,0,0,0,0,0,0,1, 1,0,0,0,0,0,0,0,1], # 10
+         [1,1,0,0,0,0,0,1,1, 1,1,0,0,0,0,0,1,1]] # 11
+
+def update_eyes(source, mapping, dest):
+    for x in range (0,18):
+        for y in range (0,12):
+            dest[ mapping[y][x] ] = source[y][x]
+
+columndirection=-1
+counter=0
+y=12
+
+for x in range(0, 18):
+    for y_counter in range(0, 12):
+        y+=columndirection
+        #print (x,y)
+        if eyemap[y][17-x] == 0:
+            eyemap[y][17-x]=counter
+            counter+=1
+        else:
+            eyemap[y][17-x]=191 #(1 past the end)
+    y+=columndirection # not sure why this extra one is needed
+    if(columndirection==1):
+        columndirection=-1
+    else:
+        columndirection=1
+
+
+# --------------------- step 2 - prepare buttons for internal and radio
+
 # 9 6 5
 b1 = digitalio.DigitalInOut(board.D9)
 b2 = digitalio.DigitalInOut(board.D6)
@@ -38,13 +81,16 @@ b2.direction = digitalio.Direction.INPUT
 b2.pull = digitalio.Pull.UP
 b3.direction = digitalio.Direction.INPUT
 b3.pull = digitalio.Pull.UP
-colormode=1
 
+
+# --------------------- step 3 - prepare neopixels
 
 pixels=neopixel.NeoPixel(board.D12, 190, brightness=0.0125, auto_write=False)
 pixels.fill((255,255,255))
 pixels.show()
 displayio.release_displays()
+# --------------------- step 4 - prepare internal display
+
 
 i2c = board.I2C()  # uses board.SCL and board.SDA
 # i2c = board.STEMMA_I2C()  # For using the built-in STEMMA QT connector on a microcontroller
@@ -74,10 +120,16 @@ text = "Hello World!"
 text_area = label.Label(terminalio.FONT, text=text, color=0xFFFF00, x=28, y=15)
 splash.append(text_area)
 
+
+# --------------------- step 5 - enter loop 
+colormode=1
 changed=False
 
-
-
+for x in range(0,18):
+    for y in range (0,12):
+        eyes[y][x] = ((x^y % 255),(x^y % 255),(x^y % 255) )
+update_eyes(eyes, eyemap, pixels)
+pixels.show()
 
 while True:
     if changed == True:
