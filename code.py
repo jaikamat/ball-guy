@@ -82,21 +82,28 @@ b2.pull = digitalio.Pull.UP
 b3.direction = digitalio.Direction.INPUT
 b3.pull = digitalio.Pull.UP
 
-radio_1 = digitalio.DigitalInOut(board.D25)
+radio_1 = digitalio.DigitalInOut(board.D25) # d25 is A
 radio_1.direction = digitalio.Direction.INPUT
-radio_2 = digitalio.DigitalInOut(board.D24)
+radio_1.pull=digitalio.Pull.DOWN
+
+radio_2 = digitalio.DigitalInOut(board.D24) # d24 is C
 radio_2.direction = digitalio.Direction.INPUT
-radio_3 = digitalio.DigitalInOut(board.D11)
+radio_2.pull=digitalio.Pull.DOWN
+
+radio_3 = digitalio.DigitalInOut(board.D11) #d11 is B
 radio_3.direction = digitalio.Direction.INPUT
-radio_4 = digitalio.DigitalInOut(board.D10)
+#radio_3.pull=digitalio.Pull.DOWN
+
+radio_4 = digitalio.DigitalInOut(board.D10) # d10 is a
 radio_4.direction = digitalio.Direction.INPUT
+radio_4.pull=digitalio.Pull.DOWN
 
 
 
 # --------------------- step 3 - prepare neopixels
 
 pixels=neopixel.NeoPixel(board.D12, 192, brightness=0.2, auto_write=False)
-pixels.fill((255,255,255))
+pixels.fill((16,0,0))
 pixels.show()
 displayio.release_displays()
 # --------------------- step 4 - prepare internal display
@@ -132,11 +139,38 @@ splash.append(text_area)
 
 
 # --------------------- step 5 - enter loop 
+
+while True:
+    if radio_1.value==True:
+        pixels[1]=(255,0,0)
+    else:
+        pixels[1]=(0,0,0)
+
+    if radio_2.value==True:
+        pixels[2]=(0,255,0)
+    else:
+        pixels[2]=(0,0,0)
+   
+    if radio_3.value==True:
+        pixels[3]=(255,255,0)
+    else:
+        pixels[3]=(0,0,0)
+
+    if radio_4.value==True:
+        pixels[4]=(0,0,255)
+    else:
+        pixels[4]=(0,0,0)
+
+    pixels.show()
+    pass
+
+
+
+
 colormode=1
 changed=False
 counter=0
 while True:
-
     for y in range(0,12):
         for x in range (0,18):
             color = ((counter+x) % 18)* (255/18)
