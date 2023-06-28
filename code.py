@@ -205,7 +205,7 @@ reaction_timeout = last_tick + reaction_length
 partymode = False               # party mode is a toggle
 partybutton_inhibit = False     # this gets set when the party mode button is detected, and makes it so that the party mode won't toggle until the button has been let go
                                 # this will prevent rapid cycling when the button is held, although a time based cooldown might be required to prevent bounce
-
+partybutton_inhibit_timer = current_tick
 # inhibit and bounce protection is not needed for the button, because the initial keypress just sets that reaction mode and updates the cooldown timer
 # and it'll turn off on its own. this allows the reaction to stay longer if the button is held down.
 # limitation - this means the reaction can only be a repeating cycle rather than a specific animation because that would need more time keeping.
@@ -223,18 +223,16 @@ def reactioncount(reactionid):
     cels = len(files)
     for file in files:
         print("found cel:" + file)
-    print(cels)
     return cels
 reaction= [ reactioncount(0), reactioncount(1), reactioncount(2), reactioncount(3)]
 # TODO: figure out a way to add variable lengths to each cel
-
+print(reaction)
+reaction_defaultframetime = 1000
+reaction_frame = 0
+reaction_nextframetime = current_tick + reaction_defaultframetime
 # --------------------- enter loop 
 
 counter=0 # temp for party mode tests
-
-while True:
-    pass
-
 
 while True:
     current_tick = get_frametime()
@@ -244,11 +242,16 @@ while True:
         last_tick = current_tick
 
     if radio_1.value==True: # party mode toggle
+        #print("party")
         if partybutton_inhibit == False:
             partymode = not partymode
             partybutton_inhibit=True
+            partybutton_inhibit_timer=current_tick+250
+            print("toggled party mode")
             # TODO: Send message to screen to report that party mode was toggled
-
+        else:
+            if(current_tick > partybutton_inhibit_timer):
+                partybutton_inhibit=False   
     if radio_2.value==True:
         set_reaction(1)
     if radio_3.value==True:
@@ -258,7 +261,9 @@ while True:
 
     # handle reaction timeout
     if (reaction_timeout < current_tick) and (reaction_mode != 0): 
+        print("reaction timed out")
         reaction_mode=0
+    
         # TODO: send message to screen
 
     # handle party mode
