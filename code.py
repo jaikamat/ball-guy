@@ -1,10 +1,7 @@
-# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
-# SPDX-License-Identifier: MIT
-
-"""
-This test will initialize the display using displayio and draw a solid white
-background, a smaller black rectangle, and some white text.
-"""
+# robocopy . d:\ /mir /xd .git
+# git add .
+# git commit -m ""
+# git push origin main
 
 import board
 import os
@@ -224,7 +221,7 @@ def set_reaction(mode):
 def reactioncount(reactionid):
     files = os.listdir("/img/" + str(reactionid))
     cels = len(files)
-    for file in cels:
+    for file in files:
         print("found cel:" + file)
     print(cels)
     return cels
