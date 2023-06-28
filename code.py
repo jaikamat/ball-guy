@@ -31,6 +31,7 @@ def ticks_diff(ticks1, ticks2):
     diff = (ticks1 - ticks2) & _TICKS_MAX
     diff = ((diff + _TICKS_HALFPERIOD) & _TICKS_MAX) - _TICKS_HALFPERIOD
     return diff
+
 def get_frametime():
     return ticks_diff(supervisor.ticks_ms(), _TICKS_STARTTIME)
 
@@ -185,103 +186,89 @@ splash.append(text_area)
 state_display = 0 # 0-3 to match the RF token
 state_brightness = 0 # 0-3 for low/mid/high
 
+desired_fps = 30
+frame_time = 1000 / desired_fps
 
+last_tick = get_frametime()
+frame = 0
+
+current_tick=0 # make this a global
 time_screentimeoutlength = 1000 # default length of mode text timeout on screen
 flag_update_text = True # preset to show initial start text
 flag_update_text_countingdown = True
 state_last_text = 0 
-time_screentimeout = ticks_add(supervisor.ticks_ms+time_screentimeoutlength)
+time_screentimeout = last_tick+time_screentimeoutlength
 
-desired_fps = 30
-frame_time = 1000 / desired_fps
+# for reaction mode, 0 is neutral, and 1-2-3 are three different emotions. code is set to start as if the first button got clicked
+reaction_length=2500 
+reaction_mode = 1
+reaction_timeout = last_tick + reaction_length
 
+partymode = False               # party mode is a toggle
+partybutton_inhibit = False     # this gets set when the party mode button is detected, and makes it so that the party mode won't toggle until the button has been let go
+                                # this will prevent rapid cycling when the button is held, although a time based cooldown might be required to prevent bounce
 
+# inhibit and bounce protection is not needed for the button, because the initial keypress just sets that reaction mode and updates the cooldown timer
+# and it'll turn off on its own. this allows the reaction to stay longer if the button is held down.
+# limitation - this means the reaction can only be a repeating cycle rather than a specific animation because that would need more time keeping.
 
-
-last_tick = supervisor.ticks_ms()
-
-
-while True:
-    current_tick = supervisor.ticks_ms()
-    elapsed_time = ticks_diff(current_tick, last_tick)
-
-    if elapsed_time >= frame_time:
-        print('do the thing, lol')
-        last_tick = current_tick
-
+# functions for setting reaction mode (code dupication reduction)
+def set_reaction(mode):
+        reaction_mode=mode
+        reaction_timeout=current_tick + reaction_length # ew a function accessing global state
+        # TODO: add call to trigger the internal display
+        print("set reaction mode")
 
 # --------------------- enter loop 
 
+counter=0 # temp for party mode tests
+
 while True:
-    time_clock = supervisor.ticks_ms()
+    current_tick = get_frametime()
+    elapsed_time = ticks_diff(current_tick, last_tick)
+    if elapsed_time >= frame_time:
+        frame+=1
+        last_tick = current_tick
 
-
-    if radio_1.value==True:
-        pixels[1]=(255,0,0)
-    else:
-        pixels[1]=(0,0,0)
+    if radio_1.value==True: # party mode toggle
+        if partybutton_inhibit == False:
+            partymode = not partymode
+            partybutton_inhibit=True
+            # TODO: Send message to screen to report that party mode was toggled
 
     if radio_2.value==True:
-        pixels[2]=(0,255,0)
-    else:
-        pixels[2]=(0,0,0)
-   
+        set_reaction(1)
     if radio_3.value==True:
-        pixels[3]=(255,255,0)
-    else:
-        pixels[3]=(0,0,0)
-
+        set_reaction(2)
     if radio_4.value==True:
-        pixels[4]=(0,0,255)
-    else:
-        pixels[4]=(0,0,0)
+        set_reaction(3)
 
-    pixels.show()
-    pass
+    # handle reaction timeout
+    if (reaction_timeout < current_tick) and (reaction_mode != 0): 
+        reaction_mode=0
+        # TODO: send message to screen
 
-
-
-
-colormode=1
-changed=False
-counter=0
-while True:
-    for y in range(0,12):
-        for x in range (0,18):
-            color = ((counter+x) % 18)* (255/18)
-            eyes[y][x] = (color, color, color )
-    update_eyes(eyes, eyemap, pixels)
-    pixels.show()
-    counter+=1
-    pass
-
-
-while True:
-    if changed == True:
-        if colormode==1:
-            pixels.fill((255,0,0))
-        if colormode==2:
-            pixels.fill((0,255,0))
-        if colormode==3:
-            pixels.fill((0,0,255))
-        if colormode==4:
-            pixels.fill((255,255,255))
+    # handle party mode
+    if(partymode):
+        for y in range(0,12):
+            for x in range (0,18):
+                color = ((counter+x) % 18)* (255/18)
+                eyes[y][x] = (color, color, color )
+        update_eyes(eyes, eyemap, pixels)
         pixels.show()
-        changed=False
+        counter+=1
 
-    if b1.value == False:
-        colormode=1
-        changed=True
-    if b2.value == False:
-        colormode=2
-        changed=True
-    if b3.value == False:
-        colormode=3
-        changed=True
-    if b3.value == True and b2.value==True and b1.value==True:
-        colormode=4
-        changed=True
+    else:
+        if reaction_mode==0:
+            pixels.fill((64,64,64))
+        elif reaction_mode==1:
+            pixels.fill((64,0,0))
+        elif reaction_mode==2:
+            pixels.fill((0,64,0))
+        elif reaction_mode==3:
+            pixels.fill((0,0,64))
 
 
-
+    pixels.show()
     pass
+
