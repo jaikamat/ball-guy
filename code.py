@@ -212,6 +212,8 @@ partybutton_inhibit_timer = current_tick
 
 # functions for setting reaction mode (code dupication reduction)
 def set_reaction(mode):
+        global reaction_mode
+        global reaction_timeout
         reaction_mode=mode
         reaction_timeout=current_tick + reaction_length # ew a function accessing global state
         # TODO: add call to trigger the internal display
@@ -261,7 +263,7 @@ while True:
 
     # handle reaction timeout
     if (reaction_timeout < current_tick) and (reaction_mode != 0): 
-        print("reaction timed out")
+        print("reaction timed out " + str(reaction_mode))
         reaction_mode=0
     
         # TODO: send message to screen
