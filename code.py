@@ -20,6 +20,8 @@ _TICKS_PERIOD = const(1<<29)
 _TICKS_MAX = const(_TICKS_PERIOD-1)
 _TICKS_HALFPERIOD = const(_TICKS_PERIOD//2)
 
+_TICKS_STARTTIME = supervisor.ticks_ms()
+
 def ticks_add(ticks, delta):
     "Add a delta to a base number of ticks, performing wraparound at 2**29ms."
     return (ticks + delta) % _TICKS_PERIOD
@@ -29,6 +31,33 @@ def ticks_diff(ticks1, ticks2):
     diff = (ticks1 - ticks2) & _TICKS_MAX
     diff = ((diff + _TICKS_HALFPERIOD) & _TICKS_MAX) - _TICKS_HALFPERIOD
     return diff
+def get_frametime():
+    return ticks_diff(supervisor.ticks_ms(), _TICKS_STARTTIME)
+
+# functions for light, etc
+def wheel(pos):
+    # Input a value 0 to 255 to get a color value.
+    # The colours are a transition r - g - b - back to r.
+    if pos < 0 or pos > 255:
+        r = g = b = 0
+    elif pos < 85:
+        r = int(pos * 3)
+        g = int(255 - pos * 3)
+        b = 0
+    elif pos < 170:
+        pos -= 85
+        r = int(255 - pos * 3)
+        g = 0
+        b = int(pos * 3)
+    else:
+        pos -= 170
+        r = 0
+        g = int(pos * 3)
+        b = int(255 - pos * 3)
+    return (r, g, b) # if ORDER in (neopixel.RGB, neopixel.GRB) else (r, g, b, 0)
+
+
+
 
 # --------------------- step 1 - prepare eye bitmap translation matrix
         # 0 1 2 3 4 5 6 7 8  9 0 1 2 3 4 5 6 7 
@@ -163,7 +192,22 @@ flag_update_text_countingdown = True
 state_last_text = 0 
 time_screentimeout = ticks_add(supervisor.ticks_ms+time_screentimeoutlength)
 
+desired_fps = 30
+frame_time = 1000 / desired_fps
 
+
+
+
+last_tick = supervisor.ticks_ms()
+
+
+while True:
+    current_tick = supervisor.ticks_ms()
+    elapsed_time = ticks_diff(current_tick, last_tick)
+
+    if elapsed_time >= frame_time:
+        print('do the thing, lol')
+        last_tick = current_tick
 
 
 # --------------------- enter loop 
