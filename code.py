@@ -7,6 +7,7 @@ background, a smaller black rectangle, and some white text.
 """
 
 import board
+import os
 import supervisor
 import displayio
 import digitalio
@@ -218,10 +219,25 @@ def set_reaction(mode):
         reaction_timeout=current_tick + reaction_length # ew a function accessing global state
         # TODO: add call to trigger the internal display
         print("set reaction mode")
+# --------------------- prepare reactions
+
+def reactioncount(reactionid):
+    files = os.listdir("/img/" + str(reactionid))
+    cels = len(files)
+    for file in cels:
+        print("found cel:" + file)
+    print(cels)
+    return cels
+reaction= [ reactioncount(0), reactioncount(1), reactioncount(2), reactioncount(3)]
+# TODO: figure out a way to add variable lengths to each cel
 
 # --------------------- enter loop 
 
 counter=0 # temp for party mode tests
+
+while True:
+    pass
+
 
 while True:
     current_tick = get_frametime()
