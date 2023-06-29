@@ -205,7 +205,7 @@ reaction_timeout = last_tick + reaction_length
 partymode = False               # party mode is a toggle
 partybutton_inhibit = False     # this gets set when the party mode button is detected, and makes it so that the party mode won't toggle until the button has been let go
                                 # this will prevent rapid cycling when the button is held, although a time based cooldown might be required to prevent bounce
-partybutton_inhibit_timer = current_tick
+partybutton_inhibit_timer = current_tick # --- a cooldown was required
 # inhibit and bounce protection is not needed for the button, because the initial keypress just sets that reaction mode and updates the cooldown timer
 # and it'll turn off on its own. this allows the reaction to stay longer if the button is held down.
 # limitation - this means the reaction can only be a repeating cycle rather than a specific animation because that would need more time keeping.
@@ -217,7 +217,7 @@ def set_reaction(mode):
         reaction_mode=mode
         reaction_timeout=current_tick + reaction_length # ew a function accessing global state
         # TODO: add call to trigger the internal display
-        print("set reaction mode")
+        # print("set reaction mode")
 # --------------------- prepare reactions
 
 def reactioncount(reactionid):
