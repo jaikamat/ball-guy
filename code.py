@@ -201,7 +201,7 @@ time_screentimeout = last_tick+time_screentimeoutlength
 
 # for reaction mode, 0 is neutral, and 1-2-3 are three different emotions. code is set to start as if the first button got clicked
 reaction_length=2500 
-reaction_mode = 1
+reaction_mode = 4
 reaction_timeout = last_tick + reaction_length
 
 partymode = False               # party mode is a toggle
@@ -214,6 +214,7 @@ partybutton_inhibit_timer = current_tick # --- a cooldown was required
 
 # functions for setting reaction mode (code dupication reduction)
 def set_reaction(mode):
+        # note - the reaction length time gets bypassed by blink mode reaction switching
         global reaction_mode
         global reaction_timeout
         reaction_mode=mode
@@ -253,8 +254,8 @@ reaction_frame = 0 # a running counter, the update function does the math to pic
 reaction_nextframetime = 0 + reaction_defaultframetime # this get updated by the return from the update function1
 reaction_frame_needs_update = True # trigger to make the next image load
 
-# TODO  reaction mode 4 is blink, add code to make end of reaction go to blink mode for a moment after a reaction times out
-#       however need to add an inhibit variable so that timeout for blink mode doesn't retrigger blink mode 
+# TODO  reaction mode 4 is blink, add code to make end of reaction go to blink mode for a moment after a reaction times out - DONE
+#       however need to add an inhibit variable so that timeout for blink mode doesn't retrigger blink mode - DONE
 
 
 
@@ -265,7 +266,12 @@ def reactionframe(reactionid, framecounter):
     frameid = framecounter % reaction[reactionid]
     #print("reaction frame " + str(frameid) + " this reaction has " + str(reaction[reactionid]) + " frames") 
     loadreactionframe(reactionid, frameid+1) # +1 to handle the images being 1..x rather than 0..x, TODO maybe change this 
-    return reaction_defaultframetime # TODO: handle anything custom here
+
+    if(reactionid == 4):
+        # blink mode
+        return 750
+    else:
+        return reaction_defaultframetime # TODO: handle anything custom here
 
 # --------------------- enter loop 
 
@@ -289,7 +295,7 @@ while True:
         if partybutton_inhibit == False:
             partymode = not partymode
             partybutton_inhibit=True
-            partybutton_inhibit_timer=current_tick+1000
+            partybutton_inhibit_timer=current_tick+1000 # increased from 250
             print("toggled party mode")
             # TODO: Send message to screen to report that party mode was toggled
         else:
@@ -309,14 +315,18 @@ while True:
     # handle reaction timeout
     if (reaction_timeout < current_tick) and (reaction_mode != 0): 
         print("reaction timed out " + str(reaction_mode))
-        reaction_mode=0
+        if (reaction_mode == 4): # blink mode times out to idle
+            reaction_mode=0
+        else:
+            reaction_mode=4 # all other reactions time out to blink
+            reaction_timeout = current_tick+750
         reaction_frame_needs_update=True
     
         # TODO: send message to screen
 
     # handle party mode
-    # TODO: Change this to make party mode overwrite default idle mode but allow reactions to occur
-    if(partymode):
+    # TODO: Change this to make party mode overwrite default idle mode but allow reactions to occur - DONE
+    if(partymode and reaction_mode==0):
         for y in range(0,12):
             for x in range (0,18):
                 color = ((counter+x) % 18)* (255/18)
