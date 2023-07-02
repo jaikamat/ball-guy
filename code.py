@@ -147,7 +147,7 @@ radio_4.pull=digitalio.Pull.DOWN
 
 # --------------------- step 3 - prepare neopixels
 
-pixels=neopixel.NeoPixel(board.D12, 192, brightness=0.12, auto_write=False)
+pixels=neopixel.NeoPixel(board.D12, 192, brightness=0.10, auto_write=False)
 pixels.fill((16,0,0))
 pixels.show()
 displayio.release_displays()
@@ -280,7 +280,7 @@ while True:
         last_tick = current_tick
     if (current_tick >= reaction_nextframetime) and (reaction_frame_needs_update == False):
         reaction_frame += 1
-        print("reaction frame update " + str(reaction_frame))
+        #print("reaction frame update " + str(reaction_frame))
         reaction_frame_needs_update=True
 
 
@@ -289,12 +289,13 @@ while True:
         if partybutton_inhibit == False:
             partymode = not partymode
             partybutton_inhibit=True
-            partybutton_inhibit_timer=current_tick+250
+            partybutton_inhibit_timer=current_tick+1000
             print("toggled party mode")
             # TODO: Send message to screen to report that party mode was toggled
         else:
             if(current_tick > partybutton_inhibit_timer):
                 partybutton_inhibit=False   
+
     if radio_2.value==True:
         set_reaction(1)
     if radio_3.value==True:
