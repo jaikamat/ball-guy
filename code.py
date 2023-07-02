@@ -234,7 +234,7 @@ print(reaction)
 
 def loadreactionframe(reactionid, frame):
     img=BMPReader("/img/"+str(reactionid)+"/"+str(frame)+".bmp")
-    img.to_string()
+    #img.to_string()
     img_data=img.get_pixels()
     for x in range(0,18):
         for y in range(0,12):
@@ -248,20 +248,36 @@ def loadreactionframe(reactionid, frame):
 loadreactionframe(0,1)
 update_eyes(eyes, eyemap, pixels)
 pixels.show()
+reaction_defaultframetime = 750
+reaction_frame = 0 # a running counter, the update function does the math to pick the right frame in sequence
+reaction_nextframetime = 0 + reaction_defaultframetime # this get updated by the return from the update function1
+reaction_frame_needs_update = True
 
-reaction_defaultframetime = 1000
-reaction_frame = 0
-reaction_nextframetime = current_tick + reaction_defaultframetime
+def reactionframe(reactionid, framecounter):
+    #global reaction_defaultframetime
+    #global reaction # get from the higher scope
+    # TODO: add custom length and flow support
+    frameid = framecounter % reaction[reactionid]
+    #print("reaction frame " + str(frameid) + " this reaction has " + str(reaction[reactionid]) + " frames") 
+    loadreactionframe(reactionid, frameid+1) # +1 to handle the images being 1..x rather than 0..x, TODO maybe change this 
+    return reaction_defaultframetime # TODO: handle anything custom here
+
 # --------------------- enter loop 
 
 counter=0 # temp for party mode tests
-
+last_reaction = reaction_mode
+print("entering mainloop-----------")
 while True:
     current_tick = get_frametime()
     elapsed_time = ticks_diff(current_tick, last_tick)
     if elapsed_time >= frame_time:
         frame+=1
         last_tick = current_tick
+    if (current_tick >= reaction_nextframetime) and (reaction_frame_needs_update == False):
+        reaction_frame += 1
+        print("reaction frame update " + str(reaction_frame))
+        reaction_frame_needs_update=True
+
 
     if radio_1.value==True: # party mode toggle
         #print("party")
@@ -281,10 +297,14 @@ while True:
     if radio_4.value==True:
         set_reaction(3)
 
+    if (last_reaction != reaction_mode):
+            last_reaction = reaction_mode
+            reaction_frame_needs_update=True
     # handle reaction timeout
     if (reaction_timeout < current_tick) and (reaction_mode != 0): 
         print("reaction timed out " + str(reaction_mode))
         reaction_mode=0
+        reaction_frame_needs_update=True
     
         # TODO: send message to screen
 
@@ -297,18 +317,13 @@ while True:
         update_eyes(eyes, eyemap, pixels)
         pixels.show()
         counter+=1
-
     else:
-        if reaction_mode==0:
-            pixels.fill((64,64,64))
-        elif reaction_mode==1:
-            pixels.fill((64,0,0))
-        elif reaction_mode==2:
-            pixels.fill((0,64,0))
-        elif reaction_mode==3:
-            pixels.fill((0,0,64))
+        if(reaction_frame_needs_update == True):
+            #print("reaction frame needs update")
+            reaction_nextframetime = current_tick + reactionframe(reaction_mode,reaction_frame)
+            reaction_frame_needs_update=False
+            update_eyes(eyes,eyemap, pixels)
+            pixels.show()
 
-
-    pixels.show()
     pass
 
