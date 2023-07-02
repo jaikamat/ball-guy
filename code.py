@@ -147,7 +147,7 @@ radio_4.pull=digitalio.Pull.DOWN
 
 # --------------------- step 3 - prepare neopixels
 
-pixels=neopixel.NeoPixel(board.D12, 192, brightness=0.2, auto_write=False)
+pixels=neopixel.NeoPixel(board.D12, 192, brightness=0.12, auto_write=False)
 pixels.fill((16,0,0))
 pixels.show()
 displayio.release_displays()
@@ -234,19 +234,20 @@ print(reaction)
 
 def loadreactionframe(reactionid, frame):
     img=BMPReader("/img/"+str(reactionid)+"/"+str(frame)+".bmp")
+    img.to_string()
     img_data=img.get_pixels()
     for x in range(0,18):
         for y in range(0,12):
-            eyes[y][x]=img_data[x][y]
+            pix=img_data[x][y]
+            pix=( img.get_pixel_r(x,y), img.get_pixel_g(x,y),img.get_pixel_b(x,y))
+            #print(pix)
+            eyes[y][x]=pix
     del img_data
     del img
 
-loadreactionframe(0,1)   
+loadreactionframe(0,1)
 update_eyes(eyes, eyemap, pixels)
 pixels.show()
-
-while True:
-    pass
 
 reaction_defaultframetime = 1000
 reaction_frame = 0
