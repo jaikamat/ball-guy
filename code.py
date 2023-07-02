@@ -11,6 +11,8 @@ import digitalio
 import terminalio
 import neopixel
 from adafruit_display_text import label
+from bmp_reader import BMPReader
+
 import adafruit_displayio_ssd1306
 
 # functions for timekeeping
@@ -229,6 +231,23 @@ def reactioncount(reactionid):
 reaction= [ reactioncount(0), reactioncount(1), reactioncount(2), reactioncount(3)]
 # TODO: figure out a way to add variable lengths to each cel
 print(reaction)
+
+def loadreactionframe(reactionid, frame):
+    img=BMPReader("/img/"+str(reactionid)+"/"+str(frame)+".bmp")
+    img_data=img.get_pixels()
+    for x in range(0,18):
+        for y in range(0,12):
+            eyes[y][x]=img_data[x][y]
+    del img_data
+    del img
+
+loadreactionframe(0,1)   
+update_eyes(eyes, eyemap, pixels)
+pixels.show()
+
+while True:
+    pass
+
 reaction_defaultframetime = 1000
 reaction_frame = 0
 reaction_nextframetime = current_tick + reaction_defaultframetime
