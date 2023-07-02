@@ -228,7 +228,7 @@ def reactioncount(reactionid):
     for file in files:
         print("found cel:" + file)
     return cels
-reaction= [ reactioncount(0), reactioncount(1), reactioncount(2), reactioncount(3)]
+reaction= [ reactioncount(0), reactioncount(1), reactioncount(2), reactioncount(3), reactioncount(4)]
 # TODO: figure out a way to add variable lengths to each cel
 print(reaction)
 
@@ -251,7 +251,12 @@ pixels.show()
 reaction_defaultframetime = 750
 reaction_frame = 0 # a running counter, the update function does the math to pick the right frame in sequence
 reaction_nextframetime = 0 + reaction_defaultframetime # this get updated by the return from the update function1
-reaction_frame_needs_update = True
+reaction_frame_needs_update = True # trigger to make the next image load
+
+# TODO  reaction mode 4 is blink, add code to make end of reaction go to blink mode for a moment after a reaction times out
+#       however need to add an inhibit variable so that timeout for blink mode doesn't retrigger blink mode 
+
+
 
 def reactionframe(reactionid, framecounter):
     #global reaction_defaultframetime
@@ -265,7 +270,7 @@ def reactionframe(reactionid, framecounter):
 # --------------------- enter loop 
 
 counter=0 # temp for party mode tests
-last_reaction = reaction_mode
+last_reaction = reaction_mode # state varible to ensure we handle button logic properly
 print("entering mainloop-----------")
 while True:
     current_tick = get_frametime()
@@ -297,7 +302,7 @@ while True:
     if radio_4.value==True:
         set_reaction(3)
 
-    if (last_reaction != reaction_mode):
+    if (last_reaction != reaction_mode): # this ensures that the new reaction gets presented immediately
             last_reaction = reaction_mode
             reaction_frame_needs_update=True
     # handle reaction timeout
@@ -309,6 +314,7 @@ while True:
         # TODO: send message to screen
 
     # handle party mode
+    # TODO: Change this to make party mode overwrite default idle mode but allow reactions to occur
     if(partymode):
         for y in range(0,12):
             for x in range (0,18):
