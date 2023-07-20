@@ -12,6 +12,7 @@ import terminalio
 import neopixel
 import random
 import math
+import time
 import adafruit_fancyled
 from adafruit_display_text import label
 from bmp_reader import BMPReader
@@ -130,29 +131,33 @@ b2.pull = digitalio.Pull.UP
 b3.direction = digitalio.Direction.INPUT
 b3.pull = digitalio.Pull.UP
 
-radio_1 = digitalio.DigitalInOut(board.D25) # d25 is A
+radio_1 = digitalio.DigitalInOut(board.A0) # d25 is A
 radio_1.direction = digitalio.Direction.INPUT
 radio_1.pull=digitalio.Pull.DOWN
 
-radio_2 = digitalio.DigitalInOut(board.D24) # d24 is C
+radio_2 = digitalio.DigitalInOut(board.A1) # d24 is C
 radio_2.direction = digitalio.Direction.INPUT
 radio_2.pull=digitalio.Pull.DOWN
 
-radio_3 = digitalio.DigitalInOut(board.D11) #d11 is B
+radio_3 = digitalio.DigitalInOut(board.A2) #d11 is B
 radio_3.direction = digitalio.Direction.INPUT
 radio_3.pull=digitalio.Pull.DOWN # TODO: verify if this was required or not
 
-radio_4 = digitalio.DigitalInOut(board.D10) # d10 is a
+radio_4 = digitalio.DigitalInOut(board.A3) # d10 is a
 radio_4.direction = digitalio.Direction.INPUT
 radio_4.pull=digitalio.Pull.DOWN
 
+brightness_switch = digitalio.DigitalInOut(board.D24)
+brightness_switch.direction = digitalio.Direction.INPUT
+brightness_switch.pull=digitalio.Pull.UP
 
 
 # --------------------- step 3 - prepare neopixels
-
-pixels=neopixel.NeoPixel(board.D12, 192, brightness=0.10, auto_write=False)
-pixels.fill((16,0,0))
+# OLD version - board.D12
+pixels=neopixel.NeoPixel(board.D25, 192, brightness=0.1, auto_write=False)
+pixels.fill((8,8,8))
 pixels.show()
+
 displayio.release_displays()
 # --------------------- step 4 - prepare internal display
 
@@ -291,7 +296,18 @@ def reactionframe(reactionid, framecounter):
 counter=0 # temp for party mode tests
 last_reaction = reaction_mode # state varible to ensure we handle button logic properly
 print("entering mainloop-----------")
+
+last_brightness=not brightness_switch.value
+
 while True:
+    if(last_brightness != brightness_switch.value):
+        last_brightness=brightness_switch.value
+        if brightness_switch.value==True:
+            pixels.brightness=1.0 # setBrightness(255)             
+        else:
+            pixels.brightness=0.20 # setBrightness(64)
+
+
     current_tick = get_frametime()
     elapsed_time = ticks_diff(current_tick, last_tick)
     if elapsed_time >= frame_time:
@@ -323,7 +339,7 @@ while True:
         set_reaction(3)
 
     if(next_blink < current_tick):
-        if (partymode==True) or (reaction_mode==4): # if we're in party mode, or we're already blinking, defer the blink
+        if (partymode==True) or (reaction_mode != 0): # (reaction_mode==4): # if we're in party mode, or we're already blinking, defer the blink
             next_blink=current_tick + random.randint(5000,10000)
         else:
             print("blink")
@@ -364,12 +380,12 @@ while True:
             for y in range(0,12):
                 for x in range (9,18):
                     eyes[y][x]=eye2
-        elif(party_submode ==1):
-            for y in range(0,12):
+        elif(party_submode ==1): # TODO: add a secondary multiplier to make these pulse more quickly along side the fade
+            for y in range(0,12):  # TODO: make this one switch between up/down modes randomly
                 eyecolor = wheel(((counter)+(y*4)) % 255)
                 for x in range (0,18):
                     eyes[y][x]=eyecolor
-        elif(party_submode ==2):
+        elif(party_submode ==2): # TODO: make this one go from outside in or inside out
             for y in range(0,12):
                 eyecolor = wheel(((counter)+(y*4)) % 255)
                 for x in range (0,18):
