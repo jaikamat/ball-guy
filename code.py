@@ -303,7 +303,7 @@ while True:
     if(last_brightness != brightness_switch.value):
         last_brightness=brightness_switch.value
         if brightness_switch.value==True:
-            pixels.brightness=1.0 # setBrightness(255)             
+            pixels.brightness=0.75 # setBrightness(255)             
         else:
             pixels.brightness=0.20 # setBrightness(64)
 
